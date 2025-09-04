@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Cards de Estatísticas -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card card-stat border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total de Produtos
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_produtos }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-boxes fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card card-stat border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Categorias
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_categorias }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-tags fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card card-stat border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Fornecedores
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_fornecedores }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-people fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card card-stat border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Estoque Baixo
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ produtos_estoque_baixo }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-exclamation-triangle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Valor Total do Estoque -->
+    <div class="col-xl-6 col-lg-7">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Valor Total do Estoque</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <h2 class="text-success">R$ {{ valor_total_estoque|floatformat:2 }}</h2>
+                    <p class="text-muted">Valor total dos produtos em estoque</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vendas do Mês -->
+    <div class="col-xl-6 col-lg-5">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Vendas do Mês</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-primary">{{ vendas_mes.total_vendas|default:0 }}</h4>
+                        <p class="text-muted">Total de Vendas</p>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success">R$ {{ vendas_mes.total_valor|default:0|floatformat:2 }}</h4>
+                        <p class="text-muted">Valor Total</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Movimentações Recentes -->
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Movimentações Recentes</h6>
+            </div>
+            <div class="card-body">
+                {% if movimentacoes_recentes %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Produto</th>
+                                    <th>Tipo</th>
+                                    <th>Quantidade</th>
+                                    <th>Usuário</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for mov in movimentacoes_recentes %}
+                                <tr>
+                                    <td>{{ mov.data_movimentacao|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ mov.produto.nome }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if mov.tipo == 'ENTRADA' %}success{% elif mov.tipo == 'SAIDA' %}danger{% else %}info{% endif %}">
+                                            {{ mov.get_tipo_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ mov.quantidade }}</td>
+                                    <td>{{ mov.usuario.first_name|default:mov.usuario.username }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Nenhuma movimentação recente.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Produtos Mais Vendidos -->
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Produtos Mais Vendidos</h6>
+            </div>
+            <div class="card-body">
+                {% if produtos_mais_vendidos %}
+                    {% for produto in produtos_mais_vendidos %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <h6 class="mb-0">{{ produto.produto__nome|truncatechars:20 }}</h6>
+                        </div>
+                        <span class="badge bg-primary">{{ produto.total_vendido }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">Nenhuma venda nos últimos 30 dias.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações Rápidas -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Ações Rápidas</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'estoque:adicionar_produto' %}" class="btn btn-primary btn-block">
+                            <i class="bi bi-plus-circle"></i> Adicionar Produto
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'estoque:movimentacao_estoque' %}" class="btn btn-success btn-block">
+                            <i class="bi bi-arrow-left-right"></i> Movimentar Estoque
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'estoque:nova_venda' %}" class="btn btn-warning btn-block">
+                            <i class="bi bi-cart-plus"></i> Nova Venda
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'estoque:relatorios' %}" class="btn btn-info btn-block">
+                            <i class="bi bi-graph-up"></i> Relatórios
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

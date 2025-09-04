@@ -1,0 +1,193 @@
+/* Melhorias de Contraste para Números e Valores */
+
+/* Modo Claro - Contraste Máximo */
+:root {
+    --text-numbers-light: #000000;
+    --text-secondary-light: #333333;
+    --text-muted-light: #666666;
+}
+
+/* Modo Escuro - Letras Brancas */
+[data-theme="dark"] {
+    --text-numbers-dark: #ffffff;
+    --text-secondary-dark: #ffffff;
+    --text-muted-dark: #ffffff;
+}
+
+/* Estilos para números em cards de estatísticas com contraste máximo */
+.card-stat .display-1,
+.card-stat .display-2,
+.card-stat .display-3,
+.card-stat .display-4,
+.card-stat .h1,
+.card-stat .h2,
+.card-stat .h3,
+.card-stat .h4 {
+    color: var(--text-numbers) !important;
+    font-weight: 900;
+    font-size: 2.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: -0.025em;
+}
+
+[data-theme="dark"] .card-stat .display-1,
+[data-theme="dark"] .card-stat .display-2,
+[data-theme="dark"] .card-stat .display-3,
+[data-theme="dark"] .card-stat .display-4,
+[data-theme="dark"] .card-stat .h1,
+[data-theme="dark"] .card-stat .h2,
+[data-theme="dark"] .card-stat .h3,
+[data-theme="dark"] .card-stat .h4 {
+    color: #ffffff !important;
+    font-weight: 900;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    letter-spacing: -0.025em;
+}
+
+/* Estilos para valores monetários */
+.price, .valor, .total, .amount {
+    color: var(--text-numbers) !important;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+}
+
+[data-theme="dark"] .price, 
+[data-theme="dark"] .valor, 
+[data-theme="dark"] .total, 
+[data-theme="dark"] .amount {
+    color: #ffffff !important;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Estilos para quantidades */
+.quantity, .estoque, .qtd {
+    color: var(--text-numbers) !important;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .quantity, 
+[data-theme="dark"] .estoque, 
+[data-theme="dark"] .qtd {
+    color: #ffffff !important;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Estilos para tabelas com números */
+.table .number, .table .valor, .table .quantidade {
+    color: var(--text-numbers) !important;
+    font-weight: 600;
+    text-align: right;
+}
+
+[data-theme="dark"] .table .number, 
+[data-theme="dark"] .table .valor, 
+[data-theme="dark"] .table .quantidade {
+    color: #ffffff !important;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Estilos para badges com números */
+.badge .number, .badge .count {
+    color: #000 !important;
+    font-weight: 700;
+}
+
+[data-theme="dark"] .badge .number, 
+[data-theme="dark"] .badge .count {
+    color: #000 !important;
+    font-weight: 700;
+}
+
+/* Estilos para indicadores de status */
+.status-number, .indicator-value {
+    color: var(--text-numbers) !important;
+    font-weight: 700;
+    font-size: 1.1em;
+}
+
+[data-theme="dark"] .status-number, 
+[data-theme="dark"] .indicator-value {
+    color: #ffffff !important;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Estilos para gráficos e charts */
+.chart-value, .chart-label {
+    color: var(--text-numbers) !important;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .chart-value, 
+[data-theme="dark"] .chart-label {
+    color: #ffffff !important;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Estilos para formulários com números */
+.form-control[type="number"], 
+.form-control[inputmode="numeric"] {
+    color: var(--text-numbers) !important;
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+}
+
+[data-theme="dark"] .form-control[type="number"], 
+[data-theme="dark"] .form-control[inputmode="numeric"] {
+    color: #ffffff !important;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Estilos para alertas com números */
+.alert .number, .alert .value {
+    color: var(--text-numbers) !important;
+    font-weight: 700;
+}
+
+[data-theme="dark"] .alert .number, 
+[data-theme="dark"] .alert .value {
+    color: #ffffff !important;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Estilos para tooltips com números */
+.tooltip .number, .tooltip .value {
+    color: var(--text-numbers) !important;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .tooltip .number, 
+[data-theme="dark"] .tooltip .value {
+    color: #ffffff !important;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Melhorias para acessibilidade */
+.high-contrast {
+    filter: contrast(1.2) brightness(1.1);
+}
+
+[data-theme="dark"] .high-contrast {
+    filter: contrast(1.3) brightness(1.2);
+}
+
+/* Estilos para números em modais */
+.modal .number, .modal .value, .modal .total {
+    color: var(--text-numbers) !important;
+    font-weight: 700;
+}
+
+[data-theme="dark"] .modal .number, 
+[data-theme="dark"] .modal .value, 
+[data-theme="dark"] .modal .total {
+    color: #ffffff !important;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}

@@ -1,0 +1,531 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Relatórios e Gráficos{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">📊 Relatórios e Gráficos</h2>
+                <p class="text-muted mb-0">Análise completa do desempenho do seu estoque</p>
+            </div>
+            <div>
+                <a href="{% url 'estoque:exportar_relatorio_excel' %}" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Exportar Excel
+                </a>
+                <button class="btn btn-outline-secondary me-2" onclick="window.print()">
+                    <i class="bi bi-printer"></i> Imprimir
+                </button>
+                <button class="btn btn-primary" onclick="atualizarDados()">
+                    <i class="bi bi-arrow-clockwise"></i> Atualizar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cards de Resumo -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card card-stat border-left-primary shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total de Produtos
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_produtos }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-boxes fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card card-stat border-left-danger shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                            Sem Estoque
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ produtos_sem_estoque }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-exclamation-triangle fa-2x text-danger"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card card-stat border-left-warning shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Estoque Baixo
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ produtos_estoque_baixo }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-exclamation-triangle fa-2x text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card card-stat border-left-success shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Valor Total Estoque
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">R$ {{ valor_total_estoque|floatformat:2 }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-currency-dollar fa-2x text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos Principais -->
+<div class="row mb-4">
+    <!-- Gráfico de Movimentações por Dia -->
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-graph-up"></i> Movimentações por Dia (Últimos 7 Dias)
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="movimentacoesChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico de Produtos por Categoria -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-pie-chart"></i> Produtos por Categoria
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="categoriasChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Segunda Linha de Gráficos -->
+<div class="row mb-4">
+    <!-- Gráfico de Movimentações por Tipo -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-bar-chart"></i> Movimentações por Tipo (Últimos 30 Dias)
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="tiposMovimentacaoChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico de Vendas por Mês -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-graph-up-arrow"></i> Vendas por Mês (Últimos 6 Meses)
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="vendasChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabelas de Relatórios -->
+<div class="row">
+    <!-- Top Produtos com Mais Movimentações -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-trophy"></i> Top 10 Produtos Mais Movimentados (30 dias)
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Posição</th>
+                                <th>Produto</th>
+                                <th>Movimentações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for produto in top_produtos_movimentacao %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-primary">{{ forloop.counter }}</span>
+                                </td>
+                                <td>{{ produto.produto__nome }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ produto.total_movimentacoes }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">Nenhuma movimentação encontrada</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Produtos com Estoque Baixo -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Produtos com Estoque Baixo
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Categoria</th>
+                                <th>Estoque Atual</th>
+                                <th>Mínimo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for produto in produtos_estoque_baixo_detalhado %}
+                            <tr>
+                                <td>{{ produto.nome }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ produto.categoria.nome }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if produto.estoque_atual == 0 %}danger{% else %}warning{% endif %}">
+                                        {{ produto.estoque_atual }}
+                                    </span>
+                                </td>
+                                <td>{{ produto.estoque_minimo }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-success">
+                                    <i class="bi bi-check-circle"></i> Todos os produtos estão com estoque adequado!
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fornecedores -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-building"></i> Fornecedores por Quantidade de Produtos
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for fornecedor in fornecedores_produtos %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-left-info">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-grow-1">
+                                        <h6 class="card-title mb-1">{{ fornecedor.nome }}</h6>
+                                        <p class="text-muted mb-0">{{ fornecedor.telefone }}</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-info fs-6">{{ fornecedor.total_produtos }}</span>
+                                        <small class="text-muted d-block">produtos</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center text-muted">
+                        <i class="bi bi-building"></i> Nenhum fornecedor encontrado
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alertas de Estoque -->
+{% if produtos_sem_estoque > 0 or produtos_estoque_baixo > 0 %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-exclamation-triangle"></i> Alertas de Estoque
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if produtos_sem_estoque > 0 %}
+                <div class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>{{ produtos_sem_estoque }}</strong> produto(s) sem estoque - 
+                    <a href="{% url 'estoque:lista_produtos' %}" class="alert-link">Ver produtos</a>
+                </div>
+                {% endif %}
+                
+                {% if produtos_estoque_baixo > 0 %}
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>{{ produtos_estoque_baixo }}</strong> produto(s) com estoque baixo - 
+                    <a href="{% url 'estoque:lista_produtos' %}" class="alert-link">Ver produtos</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Dados para os gráficos
+const movimentacoesData = {{ movimentacoes_por_dia|safe }};
+const categoriasData = {{ produtos_por_categoria|safe }};
+const vendasData = {{ vendas_por_mes|safe }};
+
+// Gráfico de Movimentações por Dia
+const movimentacoesCtx = document.getElementById('movimentacoesChart').getContext('2d');
+const movimentacoesChart = new Chart(movimentacoesCtx, {
+    type: 'line',
+    data: {
+        labels: movimentacoesData.map(item => item.dia),
+        datasets: [{
+            label: 'Entradas',
+            data: movimentacoesData.map(item => item.entrada),
+            borderColor: 'rgb(40, 167, 69)',
+            backgroundColor: 'rgba(40, 167, 69, 0.2)',
+            tension: 0.1
+        }, {
+            label: 'Saídas',
+            data: movimentacoesData.map(item => item.saida),
+            borderColor: 'rgb(220, 53, 69)',
+            backgroundColor: 'rgba(220, 53, 69, 0.2)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        },
+        plugins: {
+            title: {
+                display: true,
+                text: 'Movimentações Diárias'
+            }
+        }
+    }
+});
+
+// Gráfico de Produtos por Categoria
+const categoriasCtx = document.getElementById('categoriasChart').getContext('2d');
+const categoriasChart = new Chart(categoriasCtx, {
+    type: 'doughnut',
+    data: {
+        labels: categoriasData.map(item => item.categoria),
+        datasets: [{
+            data: categoriasData.map(item => item.quantidade),
+            backgroundColor: [
+                'rgba(54, 162, 235, 0.8)',
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(255, 205, 86, 0.8)',
+                'rgba(75, 192, 192, 0.8)',
+                'rgba(153, 102, 255, 0.8)',
+                'rgba(255, 159, 64, 0.8)'
+            ],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Distribuição por Categoria'
+            },
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Gráfico de Movimentações por Tipo
+const tiposCtx = document.getElementById('tiposMovimentacaoChart').getContext('2d');
+const tiposChart = new Chart(tiposCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Entradas', 'Saídas'],
+        datasets: [{
+            data: [{{ movimentacoes_entrada }}, {{ movimentacoes_saida }}],
+            backgroundColor: [
+                'rgba(40, 167, 69, 0.8)',
+                'rgba(220, 53, 69, 0.8)'
+            ],
+            borderColor: [
+                'rgb(40, 167, 69)',
+                'rgb(220, 53, 69)'
+            ],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        },
+        plugins: {
+            title: {
+                display: true,
+                text: 'Movimentações por Tipo (30 dias)'
+            }
+        }
+    }
+});
+
+// Gráfico de Vendas por Mês
+const vendasCtx = document.getElementById('vendasChart').getContext('2d');
+const vendasChart = new Chart(vendasCtx, {
+    type: 'line',
+    data: {
+        labels: vendasData.map(item => item.mes),
+        datasets: [{
+            label: 'Número de Vendas',
+            data: vendasData.map(item => item.total),
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        },
+        plugins: {
+            title: {
+                display: true,
+                text: 'Evolução das Vendas'
+            }
+        }
+    }
+});
+
+// Função para atualizar dados dos gráficos
+function atualizarDados() {
+    const btn = document.querySelector('button[onclick="atualizarDados()"]');
+    const originalText = btn.innerHTML;
+    
+    // Mostrar loading
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Atualizando...';
+    btn.disabled = true;
+    
+    // Fazer requisição AJAX para atualizar dados
+    fetch('{% url "estoque:dashboard_ajax" %}')
+        .then(response => response.json())
+        .then(data => {
+            // Atualizar cards de resumo
+            document.querySelector('.card-stat:nth-child(1) .h5').textContent = data.total_produtos;
+            document.querySelector('.card-stat:nth-child(2) .h5').textContent = data.produtos_sem_estoque;
+            document.querySelector('.card-stat:nth-child(3) .h5').textContent = data.produtos_estoque_baixo;
+            document.querySelector('.card-stat:nth-child(4) .h5').textContent = `R$ ${data.valor_total_estoque.toFixed(2)}`;
+            
+            // Atualizar gráfico de movimentações
+            const movimentacoesData = data.movimentacoes_por_dia;
+            movimentacoesChart.data.labels = movimentacoesData.map(item => item.dia);
+            movimentacoesChart.data.datasets[0].data = movimentacoesData.map(item => item.entrada);
+            movimentacoesChart.data.datasets[1].data = movimentacoesData.map(item => item.saida);
+            movimentacoesChart.update();
+            
+            // Mostrar mensagem de sucesso
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                <i class="bi bi-check-circle"></i> Dados atualizados com sucesso!
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            // Remover alerta após 3 segundos
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 3000);
+        })
+        .catch(error => {
+            console.error('Erro ao atualizar dados:', error);
+            alert('Erro ao atualizar dados. Tente novamente.');
+        })
+        .finally(() => {
+            // Restaurar botão
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+}
+
+// Atualizar gráficos a cada 60 segundos
+setInterval(function() {
+    console.log('Atualizando dados dos gráficos automaticamente...');
+    atualizarDados();
+}, 60000);
+</script>
+{% endblock %}

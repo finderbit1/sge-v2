@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Venda #{{ venda.numero_venda }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-cart-check"></i> Venda #{{ venda.numero_venda }}
+                </h5>
+                <div>
+                    <span class="badge bg-{% if venda.status == 'CONCLUIDA' %}success{% elif venda.status == 'PENDENTE' %}warning{% else %}danger{% endif %}">
+                        {{ venda.get_status_display }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Informações da Venda</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Número:</strong></td>
+                                <td>{{ venda.numero_venda }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cliente:</strong></td>
+                                <td>{{ venda.cliente }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Data:</strong></td>
+                                <td>{{ venda.data_venda|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Vendedor:</strong></td>
+                                <td>{{ venda.vendedor.first_name|default:venda.vendedor.username }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td>{{ venda.get_status_display }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Valores</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Subtotal:</strong></td>
+                                <td>R$ {{ venda.total|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Desconto:</strong></td>
+                                <td>R$ {{ venda.desconto|floatformat:2 }}</td>
+                            </tr>
+                            <tr class="table-success">
+                                <td><strong>Total:</strong></td>
+                                <td><strong>R$ {{ venda.total_liquido|floatformat:2 }}</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                {% if venda.observacoes %}
+                <div class="mt-3">
+                    <h6>Observações</h6>
+                    <p class="text-muted">{{ venda.observacoes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-list-ul"></i> Itens da Venda
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if itens %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Produto</th>
+                                    <th>Quantidade</th>
+                                    <th>Preço Unitário</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in itens %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ item.produto.codigo }}</strong> - {{ item.produto.nome }}
+                                    </td>
+                                    <td>{{ item.quantidade }} {{ item.produto.get_unidade_display }}</td>
+                                    <td>R$ {{ item.preco_unitario|floatformat:2 }}</td>
+                                    <td>R$ {{ item.subtotal|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-success">
+                                    <th colspan="3">Total:</th>
+                                    <th>R$ {{ venda.total|floatformat:2 }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">Nenhum item encontrado nesta venda.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-12">
+        <a href="{% url 'estoque:dashboard' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar ao Dashboard
+        </a>
+        <a href="{% url 'estoque:nova_venda' %}" class="btn btn-primary">
+            <i class="bi bi-cart-plus"></i> Nova Venda
+        </a>
+    </div>
+</div>
+{% endblock %}

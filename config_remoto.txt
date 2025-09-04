@@ -1,0 +1,30 @@
+# Configuração MySQL Remoto - Sistema de Estoque
+# Preencha as informações abaixo e execute: python config_remote_mysql.py
+
+# URL do servidor MySQL (ex: mysql.exemplo.com, 192.168.1.100, etc.)
+HOST=seu_servidor_mysql.com
+
+# Porta do MySQL (geralmente 3306)
+PORT=3306
+
+# Usuário do MySQL
+USER=seu_usuario
+
+# Senha do MySQL
+PASSWORD=sua_senha
+
+# Nome do banco de dados
+DATABASE=sge_estoque
+
+# Exemplo de configuração:
+# HOST=mysql.planetscale.com
+# PORT=3306
+# USER=abc123def456
+# PASSWORD=pscale_pw_xyz789
+# DATABASE=sge_estoque
+
+# Instruções:
+# 1. Preencha as informações acima
+# 2. Execute: python config_remote_mysql.py
+# 3. O script irá testar a conexão e configurar o sistema
+

@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Produtos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Lista de Produtos</h2>
+    <a href="{% url 'estoque:adicionar_produto' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Adicionar Produto
+    </a>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="busca" class="form-label">Buscar</label>
+                <input type="text" class="form-control" id="busca" name="busca" 
+                       value="{{ filtros.busca }}" placeholder="Nome ou código do produto">
+            </div>
+            <div class="col-md-2">
+                <label for="categoria" class="form-label">Categoria</label>
+                <select class="form-select" id="categoria" name="categoria">
+                    <option value="">Todas</option>
+                    {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}" 
+                                {% if filtros.categoria == categoria.id|stringformat:"s" %}selected{% endif %}>
+                            {{ categoria.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="fornecedor" class="form-label">Fornecedor</label>
+                <select class="form-select" id="fornecedor" name="fornecedor">
+                    <option value="">Todos</option>
+                    {% for fornecedor in fornecedores %}
+                        <option value="{{ fornecedor.id }}" 
+                                {% if filtros.fornecedor == fornecedor.id|stringformat:"s" %}selected{% endif %}>
+                            {{ fornecedor.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="status_estoque" class="form-label">Status Estoque</label>
+                <select class="form-select" id="status_estoque" name="status_estoque">
+                    <option value="">Todos</option>
+                    <option value="baixo" {% if filtros.status_estoque == 'baixo' %}selected{% endif %}>Estoque Baixo</option>
+                    <option value="sem_estoque" {% if filtros.status_estoque == 'sem_estoque' %}selected{% endif %}>Sem Estoque</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="bi bi-search"></i> Filtrar
+                </button>
+                <a href="{% url 'estoque:lista_produtos' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle"></i> Limpar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tabela de Produtos -->
+<div class="card">
+    <div class="card-body">
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nome</th>
+                            <th>Categoria</th>
+                            <th>Fornecedor</th>
+                            <th>Estoque</th>
+                            <th>Preço Custo</th>
+                            <th>Preço Venda</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for produto in page_obj %}
+                        <tr>
+                            <td>
+                                <strong>{{ produto.codigo }}</strong>
+                            </td>
+                            <td>
+                                <a href="{% url 'estoque:detalhes_produto' produto.id %}" 
+                                   class="text-decoration-none">
+                                    {{ produto.nome|truncatechars:30 }}
+                                </a>
+                            </td>
+                            <td>{{ produto.categoria.nome }}</td>
+                            <td>{{ produto.fornecedor.nome|truncatechars:20 }}</td>
+                            <td>
+                                <span class="badge bg-{% if produto.estoque_atual <= 0 %}danger{% elif produto.estoque_atual <= produto.estoque_minimo %}warning{% else %}success{% endif %}">
+                                    {{ produto.estoque_atual }} {{ produto.get_unidade_display }}
+                                </span>
+                                {% if produto.estoque_minimo > 0 %}
+                                    <small class="text-muted d-block">Mín: {{ produto.estoque_minimo }}</small>
+                                {% endif %}
+                            </td>
+                            <td>R$ {{ produto.preco_custo|floatformat:2 }}</td>
+                            <td>R$ {{ produto.preco_venda|floatformat:2 }}</td>
+                            <td>
+                                {% if produto.status_estoque == "Sem Estoque" %}
+                                    <span class="badge bg-danger">{{ produto.status_estoque }}</span>
+                                {% elif produto.status_estoque == "Estoque Baixo" %}
+                                    <span class="badge bg-warning">{{ produto.status_estoque }}</span>
+                                {% else %}
+                                    <span class="badge bg-success">{{ produto.status_estoque }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'estoque:detalhes_produto' produto.id %}" 
+                                       class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'estoque:editar_produto' produto.id %}" 
+                                       class="btn btn-sm btn-outline-secondary" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginação -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Navegação de páginas">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if filtros.busca %}&busca={{ filtros.busca }}{% endif %}{% if filtros.categoria %}&categoria={{ filtros.categoria }}{% endif %}{% if filtros.fornecedor %}&fornecedor={{ filtros.fornecedor }}{% endif %}{% if filtros.status_estoque %}&status_estoque={{ filtros.status_estoque }}{% endif %}">Primeira</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filtros.busca %}&busca={{ filtros.busca }}{% endif %}{% if filtros.categoria %}&categoria={{ filtros.categoria }}{% endif %}{% if filtros.fornecedor %}&fornecedor={{ filtros.fornecedor }}{% endif %}{% if filtros.status_estoque %}&status_estoque={{ filtros.status_estoque }}{% endif %}">Anterior</a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filtros.busca %}&busca={{ filtros.busca }}{% endif %}{% if filtros.categoria %}&categoria={{ filtros.categoria }}{% endif %}{% if filtros.fornecedor %}&fornecedor={{ filtros.fornecedor }}{% endif %}{% if filtros.status_estoque %}&status_estoque={{ filtros.status_estoque }}{% endif %}">Próxima</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if filtros.busca %}&busca={{ filtros.busca }}{% endif %}{% if filtros.categoria %}&categoria={{ filtros.categoria }}{% endif %}{% if filtros.fornecedor %}&fornecedor={{ filtros.fornecedor }}{% endif %}{% if filtros.status_estoque %}&status_estoque={{ filtros.status_estoque }}{% endif %}">Última</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-box display-1 text-muted"></i>
+                <h3 class="text-muted">Nenhum produto encontrado</h3>
+                <p class="text-muted">
+                    {% if filtros.busca or filtros.categoria or filtros.fornecedor or filtros.status_estoque %}
+                        Tente ajustar os filtros de busca.
+                    {% else %}
+                        Comece adicionando seu primeiro produto.
+                    {% endif %}
+                </p>
+                <a href="{% url 'estoque:adicionar_produto' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Adicionar Produto
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

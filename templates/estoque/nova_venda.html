@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Nova Venda{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2>Nova Venda</h2>
+        <p class="text-muted">Crie uma nova venda e registre os itens vendidos.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-cart-plus"></i> Dados da Venda
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="vendaForm">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.cliente.id_for_label }}" class="form-label">
+                                {{ form.cliente.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.cliente }}
+                            {% if form.cliente.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.cliente.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.desconto.id_for_label }}" class="form-label">
+                                {{ form.desconto.label }}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                {{ form.desconto }}
+                            </div>
+                            {% if form.desconto.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.desconto.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.observacoes.id_for_label }}" class="form-label">
+                            {{ form.observacoes.label }}
+                        </label>
+                        {{ form.observacoes }}
+                        {% if form.observacoes.errors %}
+                            <div class="text-danger">
+                                {% for error in form.observacoes.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+
+                    <h6>Itens da Venda</h6>
+                    <div id="itens-container">
+                        {{ formset.management_form }}
+                        {% for form in formset %}
+                            <div class="item-form row mb-3" data-form-index="{{ forloop.counter0 }}">
+                                <div class="col-md-4">
+                                    <label class="form-label">Produto</label>
+                                    {{ form.produto }}
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Quantidade</label>
+                                    {{ form.quantidade }}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Preço Unitário</label>
+                                    {{ form.preco_unitario }}
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Subtotal</label>
+                                    <input type="text" class="form-control subtotal" readonly>
+                                </div>
+                                <div class="col-md-1 d-flex align-items-end">
+                                    <button type="button" class="btn btn-danger btn-sm remove-item">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <button type="button" class="btn btn-success btn-sm" id="add-item">
+                        <i class="bi bi-plus"></i> Adicionar Item
+                    </button>
+
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Total da Venda: <span id="total-venda">R$ 0,00</span></h5>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <a href="{% url 'estoque:dashboard' %}" class="btn btn-secondary me-2">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Finalizar Venda
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addItemBtn = document.getElementById('add-item');
+    const itensContainer = document.getElementById('itens-container');
+    const totalSpan = document.getElementById('total-venda');
+    let formCount = parseInt(document.getElementById('id_form-TOTAL_FORMS').value);
+
+    // Adicionar novo item
+    addItemBtn.addEventListener('click', function() {
+        const newForm = document.querySelector('.item-form').cloneNode(true);
+        newForm.innerHTML = newForm.innerHTML.replace(/form-\d+/g, `form-${formCount}`);
+        newForm.querySelector('input[name$="-produto"]').name = `form-${formCount}-produto`;
+        newForm.querySelector('input[name$="-quantidade"]').name = `form-${formCount}-quantidade`;
+        newForm.querySelector('input[name$="-preco_unitario"]').name = `form-${formCount}-preco_unitario`;
+        newForm.querySelector('input[name$="-subtotal"]').name = `form-${formCount}-subtotal`;
+        newForm.querySelector('input[name$="-id"]').name = `form-${form_count}-id`;
+        
+        itensContainer.appendChild(newForm);
+        document.getElementById('id_form-TOTAL_FORMS').value = ++formCount;
+        
+        // Adicionar event listeners ao novo formulário
+        addItemListeners(newForm);
+    });
+
+    // Adicionar event listeners aos formulários existentes
+    document.querySelectorAll('.item-form').forEach(addItemListeners);
+
+    function addItemListeners(form) {
+        const quantidadeInput = form.querySelector('input[name$="-quantidade"]');
+        const precoInput = form.querySelector('input[name$="-preco_unitario"]');
+        const subtotalInput = form.querySelector('.subtotal');
+        const removeBtn = form.querySelector('.remove-item');
+
+        // Calcular subtotal
+        function calcularSubtotal() {
+            const quantidade = parseFloat(quantidadeInput.value) || 0;
+            const preco = parseFloat(precoInput.value) || 0;
+            const subtotal = quantidade * preco;
+            subtotalInput.value = subtotal.toFixed(2);
+            calcularTotal();
+        }
+
+        quantidadeInput.addEventListener('input', calcularSubtotal);
+        precoInput.addEventListener('input', calcularSubtotal);
+
+        // Remover item
+        removeBtn.addEventListener('click', function() {
+            form.remove();
+            calcularTotal();
+        });
+    }
+
+    // Calcular total da venda
+    function calcularTotal() {
+        let total = 0;
+        document.querySelectorAll('.subtotal').forEach(input => {
+            total += parseFloat(input.value) || 0;
+        });
+        totalSpan.textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+    }
+});
+</script>
+{% endblock %}

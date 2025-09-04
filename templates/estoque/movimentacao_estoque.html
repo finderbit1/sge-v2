@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Movimentação de Estoque{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-arrow-left-right"></i> Movimentação de Estoque
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.produto.id_for_label }}" class="form-label">
+                            {{ form.produto.label }}
+                            <span class="text-danger">*</span>
+                        </label>
+                        {{ form.produto }}
+                        {% if form.produto.errors %}
+                            <div class="text-danger">
+                                {% for error in form.produto.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.tipo.id_for_label }}" class="form-label">
+                            {{ form.tipo.label }}
+                            <span class="text-danger">*</span>
+                        </label>
+                        {{ form.tipo }}
+                        {% if form.tipo.errors %}
+                            <div class="text-danger">
+                                {% for error in form.tipo.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.quantidade.id_for_label }}" class="form-label">
+                            {{ form.quantidade.label }}
+                            <span class="text-danger">*</span>
+                        </label>
+                        {{ form.quantidade }}
+                        {% if form.quantidade.errors %}
+                            <div class="text-danger">
+                                {% for error in form.quantidade.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3" id="destino-field" style="display: none;">
+                        <label for="{{ form.destino.id_for_label }}" class="form-label">
+                            {{ form.destino.label }}
+                        </label>
+                        {{ form.destino }}
+                        {% if form.destino.errors %}
+                            <div class="text-danger">
+                                {% for error in form.destino.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.observacoes.id_for_label }}" class="form-label">
+                            {{ form.observacoes.label }}
+                        </label>
+                        {{ form.observacoes }}
+                        {% if form.observacoes.errors %}
+                            <div class="text-danger">
+                                {% for error in form.observacoes.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'estoque:dashboard' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Realizar Movimentação
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Informações sobre o produto selecionado -->
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-6">
+        <div class="card" id="produto-info" style="display: none;">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Informações do Produto</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <strong>Estoque Atual:</strong>
+                        <span id="estoque-atual">-</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Estoque Mínimo:</strong>
+                        <span id="estoque-minimo">-</span>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6">
+                        <strong>Preço de Custo:</strong>
+                        <span id="preco-custo">-</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Preço de Venda:</strong>
+                        <span id="preco-venda">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoSelect = document.getElementById('id_tipo');
+    const destinoField = document.getElementById('destino-field');
+    const produtoSelect = document.getElementById('id_produto');
+    const produtoInfo = document.getElementById('produto-info');
+    
+    // Mostrar/ocultar campo destino baseado no tipo
+    function toggleDestinoField() {
+        if (tipoSelect.value === 'TRANSFERENCIA') {
+            destinoField.style.display = 'block';
+        } else {
+            destinoField.style.display = 'none';
+        }
+    }
+    
+    // Carregar informações do produto
+    function loadProdutoInfo() {
+        const produtoId = produtoSelect.value;
+        if (produtoId) {
+            fetch(`/estoque/ajax/buscar-produto/?term=${produtoId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.produtos && data.produtos.length > 0) {
+                        const produto = data.produtos[0];
+                        document.getElementById('estoque-atual').textContent = produto.estoque_atual + ' ' + produto.unidade;
+                        document.getElementById('estoque-minimo').textContent = produto.estoque_minimo || 'Não definido';
+                        document.getElementById('preco-custo').textContent = 'R$ ' + produto.preco_custo.toFixed(2);
+                        document.getElementById('preco-venda').textContent = 'R$ ' + produto.preco_venda.toFixed(2);
+                        produtoInfo.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar informações do produto:', error);
+                });
+        } else {
+            produtoInfo.style.display = 'none';
+        }
+    }
+    
+    // Event listeners
+    tipoSelect.addEventListener('change', toggleDestinoField);
+    produtoSelect.addEventListener('change', loadProdutoInfo);
+    
+    // Inicializar
+    toggleDestinoField();
+    loadProdutoInfo();
+});
+</script>
+{% endblock %}
